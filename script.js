@@ -58,14 +58,61 @@ function revealOnScroll() {
 window.addEventListener("scroll", revealOnScroll);
 window.addEventListener("load", revealOnScroll);
 
-// Contact form message
-function sendMessage(event) {
-  event.preventDefault();
-
+// Form Submission Handler
+async function sendMessage(event) {
+  event.preventDefault(); // Prevents the page from reloading
+  
+  // Get form values and UI elements
   const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const message = document.getElementById("message").value;
   const formMsg = document.getElementById("formMsg");
+  const submitBtn = document.querySelector(".btn.primary");
 
-  formMsg.textContent = `Thank you, ${name}! Your message has been sent.`;
+  // Show a loading state on the button
+  submitBtn.textContent = "Sending...";
+  formMsg.textContent = ""; 
 
-  event.target.reset();
+  try {
+    // Send the actual data to Web3Forms
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        access_key: "e65f25b5-a1d3-453f-8820-5379fb6d06b4", // <-- PASTE YOUR KEY HERE
+        name: name,
+        email: email,
+        message: message,
+        subject: "New Contact Form Submission from Tanvir Portfolio" // Optional: custom email subject
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.status === 200) {
+      // Success
+      formMsg.style.color = "#4ade80"; 
+      formMsg.textContent = `Thanks ${name}! Your message has been sent.`;
+      event.target.reset(); // Clear the form
+    } else {
+      // API error
+      formMsg.style.color = "#f87171"; 
+      formMsg.textContent = result.message || "Something went wrong. Please try again.";
+    }
+  } catch (error) {
+    // Network error
+    formMsg.style.color = "#f87171"; 
+    formMsg.textContent = "Network error. Please check your internet connection.";
+  } finally {
+    // Reset button text
+    submitBtn.textContent = "Send Message";
+    
+    // Remove the message after 5 seconds
+    setTimeout(() => {
+      formMsg.textContent = "";
+    }, 5000);
+  }
 }
