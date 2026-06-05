@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tanvir's Calculator</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --calc-bg: rgba(30, 41, 59, 0.7);
+            --display-bg: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #818cf8;
+            
+            /* Neon Accents */
+            --accent-glow: 0 0 15px rgba(99, 102, 241, 0.4);
+            --btn-num: rgba(255, 255, 255, 0.05);
+            --btn-num-hover: rgba(255, 255, 255, 0.12);
+            --btn-op: #6366f1;
+            --btn-op-hover: #4f46e5;
+            --btn-util: rgba(148, 163, 184, 0.2);
+            --btn-util-hover: rgba(148, 163, 184, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            /* Prevent accidental text selection zooming on mobile double-tap */
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh; /* Modern mobile dynamic viewport height */
+            background: var(--bg-gradient);
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        /* CALCULATOR CONTAINER */
+        .calculator {
+            width: 100%;
+            max-width: 360px;
+            background: var(--calc-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), var(--accent-glow);
+            
+            /* Entrance Animation */
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+            animation: fadeInCalc 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInCalc {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* DISPLAY SCREEN */
+        .display {
+            background-color: var(--display-bg);
+            padding: 24px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 110px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .display .history {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            min-height: 22px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .display .current {
+            font-size: 2.4rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow-x: auto; /* Allow horizontal swipe for long numbers on mobile */
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+
+        .display .current::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Chrome/Safari */
+        }
+
+        /* JS Result Pulse Animation */
+        @keyframes resultPulse {
+            0% { transform: scale(1); color: #6366f1; }
+            50% { transform: scale(1.03); color: #34d399; }
+            100% { transform: scale(1); color: var(--text-main); }
+        }
+        .pulse-effect {
+            animation: resultPulse 0.3s ease-out;
+        }
+
+        /* BUTTONS GRID */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            padding: 18px 0; /* Vertical padding, width is fluid via grid */
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-radius: 18px;
+            cursor: pointer;
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            transition: background-color 0.2s, transform 0.1s;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button:active {
+            transform: scale(0.92);
+        }
+
+        .btn-number { background-color: var(--btn-num); }
+        .btn-number:hover { background-color: var(--btn-num-hover); }
+
+        .btn-operator { 
+            background-color: var(--btn-op); 
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .btn-operator:hover { 
+            background-color: var(--btn-op-hover);
+        }
+
+        .btn-utility { background-color: var(--btn-util); }
+        .btn-utility:hover { background-color: var(--btn-util-hover); }
+
+        .span-two { grid-column: span 2; }
+
+        /* JS Ripple Element */
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: rippleEffect 0.4s linear;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* -------------------------------------------
+           MOBILE RESPONSIVE MEDIA QUERIES
+        ------------------------------------------- */
+        @media (max-width: 380px) {
+            body {
+                padding: 10px;
+            }
+            .calculator {
+                padding: 16px;
+                border-radius: 22px;
+            }
+            .display {
+                padding: 16px;
+                min-height: 95px;
+                margin-bottom: 14px;
+            }
+            .display .current {
+                font-size: 2rem;
+            }
+            .buttons {
+                gap: 8px;
+            }
+            button {
+                padding: 14px 0;
+                font-size: 1.15rem;
+                border-radius: 14px;
+            }
+        }
+
+        /* Landscape orientation safety check for smaller phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                overflow-y: auto;
+                align-items: flex-start;
+            }
+            .calculator {
+                margin: 20px auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="display">
+            <div id="history" class="history"></div>
+            <div id="current" class="current">0</div>
+        </div>
+        <div class="buttons">
+            <button class="btn-utility span-two" onclick="clearAll()">AC</button>
+            <button class="btn-utility" onclick="deleteLast()">DEL</button>
+            <button class="btn-operator" onclick="appendOperator('/')">÷</button>
+
+            <button class="btn-number" onclick="appendNumber('7')">7</button>
+            <button class="btn-number" onclick="appendNumber('8')">8</button>
+            <button class="btn-number" onclick="appendNumber('9')">9</button>
+            <button class="btn-operator" onclick="appendOperator('*')">×</button>
+
+            <button class="btn-number" onclick="appendNumber('4')">4</button>
+            <button class="btn-number" onclick="appendNumber('5')">5</button>
+            <button class="btn-number" onclick="appendNumber('6')">6</button>
+            <button class="btn-operator" onclick="appendOperator('-')">−</button>
+
+            <button class="btn-number" onclick="appendNumber('1')">1</button>
+            <button class="btn-number" onclick="appendNumber('2')">2</button>
+            <button class="btn-number" onclick="appendNumber('3')">3</button>
+            <button class="btn-operator" onclick="appendOperator('+')">+</button>
+
+            <button class="btn-number span-two" onclick="appendNumber('0')">0</button>
+            <button class="btn-number" onclick="appendNumber('.')">.</button>
+            <button class="btn-operator" onclick="compute()">=</button>
+        </div>
+    </div>
+
+    <script>
+        const currentDisplay = document.getElementById('current');
+        const historyDisplay = document.getElementById('history');
+
+        let currentOperand = '';
+        let previousOperand = '';
+        let operation = undefined;
+        let shouldResetDisplay = false;
+
+        // --- Touch-Friendly Ripple Effect ---
+        document.querySelectorAll('button').forEach(button => {
+            // works flawlessly for both 'click' and mobile touch events
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                
+                const rect = this.getBoundingClientRect();
+                
+                // Get accurate touch or mouse coordinates
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.marginLeft = ripple.style.marginTop = `${-size/2}px`;
+
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 400);
+            });
+        });
+
+        function triggerDisplayPulse() {
+            currentDisplay.classList.remove('pulse-effect');
+            void currentDisplay.offsetWidth; // Force Reflow
+            currentDisplay.classList.add('pulse-effect');
+        }
+
+        // --- Core Math Engine ---
+        function appendNumber(number) {
+            if (shouldResetDisplay) {
+                currentOperand = '';
+                shouldResetDisplay = false;
+            }
+            if (number === '.' && currentOperand.includes('.')) return;
+            if (currentOperand === '0' && number !== '.') {
+                currentOperand = number;
+            } else {
+                currentOperand = currentOperand.toString() + number.toString();
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (currentOperand === '' && previousOperand === '') return;
+            if (currentOperand === '' && previousOperand !== '') {
+                operation = op;
+                updateDisplay();
+                return;
+            }
+            if (previousOperand !== '') {
+                compute(false);
+            }
+            operation = op;
+            previousOperand = currentOperand;
+            currentOperand = '';
+            updateDisplay();
+        }
+
+        function compute(shouldPulse = true) {
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operation) {
+                case '+': computation = prev + current; break;
+                case '-': computation = prev - current; break;
+                case '*': computation = prev * current; break;
+                case '/':
+                    if (current === 0) {
+                        alert("Cannot divide by zero");
+                        clearAll();
+                        return;
+                    }
+                    computation = prev / current;
+                    break;
+                default: return;
+            }
+
+            currentOperand = Math.round(computation * 1e12) / 1e12;
+            operation = undefined;
+            previousOperand = '';
+            shouldResetDisplay = true;
+            
+            updateDisplay();
+            if (shouldPulse) triggerDisplayPulse();
+        }
+
+        function clearAll() {
+            currentOperand = '0';
+            previousOperand = '';
+            operation = undefined;
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (shouldResetDisplay) return;
+            if (currentOperand.length <= 1) {
+                currentOperand = '0';
+            } else {
+                currentOperand = currentOperand.toString().slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        function getDisplaySymbol(op) {
+            if (op === '*') return '×';
+            if (op === '/') return '÷';
+            if (op === '-') return '−';
+            return op;
+        }
+
+        function updateDisplay() {
+            currentDisplay.innerText = currentOperand || '0';
+            if (operation != null) {
+                historyDisplay.innerText = `${previousOperand} ${getDisplaySymbol(operation)}`;
+            } else {
+                historyDisplay.innerText = '';
+            }
+        }
+
+        // Desktop Keyboard Pass-Through
+        window.addEventListener('keydown', e => {
+            const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText === e.key || (e.key === 'Enter' && b.innerText === '='));
+            if (btn) btn.click();
+            
+            if (e.key >= 0 && e.key <= 9 || e.key === '.') appendNumber(e.key);
+            if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') appendOperator(e.key);
+            if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); compute(); }
+            if (e.key === 'Backspace') deleteLast();
+            if (e.key === 'Escape') clearAll();
+        });
+    </script>
+</body>
+</html>
