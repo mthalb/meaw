@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | Farhan</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="animated-bg"></div>
+
+  <header>
+    <a href="index.html" class="logo">Farhan<span>.</span></a>
+
+    <nav id="navbar">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="skills.html">Skills</a>
+      <a href="contact.html" class="active">Contact</a>
+    </nav>
+
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+  </header>
+
+  <section class="page-heading reveal">
+    <h1>Contact Me</h1>
+    <p>Let's connect and build something amazing</p>
+  </section>
+
+  <section class="contact-container">
+    <div class="contact-info reveal">
+      <h2>Get in Touch</h2>
+      <p>If you want to contact me, send a message using the form.</p>
+
+      <div class="contact-box">
+        <strong>Email</strong>
+        <span>farhan@example.com</span>
+      </div>
+
+      <div class="contact-box">
+        <strong>Phone</strong>
+        <span>+91 98765 43210</span>
+      </div>
+
+      <div class="contact-box">
+        <strong>Location</strong>
+        <span>India</span>
+      </div>
+    </div>
+
+    <form class="contact-form reveal" onsubmit="sendMessage(event)">
+      <input type="text" id="name" placeholder="Your Name" required />
+      <input type="email" id="email" placeholder="Your Email" required />
+      <textarea id="message" rows="6" placeholder="Your Message" required></textarea>
+      <button type="submit" class="btn primary">Send Message</button>
+      <p id="formMsg"></p>
+    </form>
+  </section>
+
+  <footer>
+    <p>© 2025 Farhan. All Rights Reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
