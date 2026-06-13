@@ -55,6 +55,32 @@ function revealOnScroll() {
   });
 }
 
+// Visitor Counter
+const visitorCountEl = document.getElementById("visitor-count");
+if (visitorCountEl) {
+  // Count this visit using localStorage
+  let visits = localStorage.getItem("siteVisits");
+  visits = visits ? parseInt(visits) + 1 : 1;
+  localStorage.setItem("siteVisits", visits);
+
+  // Animate the number counting up
+  let current = 0;
+  const target = visits;
+  const duration = 1500;
+  const step = Math.ceil(target / (duration / 30));
+
+  const counter = setInterval(() => {
+    current += step;
+    if (current >= target) {
+      current = target;
+      clearInterval(counter);
+    }
+    visitorCountEl.textContent = current.toLocaleString() + "+";
+  }, 30);
+}
+
+
+
 window.addEventListener("scroll", revealOnScroll);
 window.addEventListener("load", revealOnScroll);
 
@@ -115,27 +141,4 @@ async function sendMessage(event) {
       formMsg.textContent = "";
     }, 5000);
   }
-}
-// Visitor Counter
-const visitorCountEl = document.getElementById("visitor-count");
-if (visitorCountEl) {
-  // Count this visit using localStorage
-  let visits = localStorage.getItem("siteVisits");
-  visits = visits ? parseInt(visits) + 1 : 1;
-  localStorage.setItem("siteVisits", visits);
-
-  // Animate the number counting up
-  let current = 0;
-  const target = visits;
-  const duration = 1500;
-  const step = Math.ceil(target / (duration / 30));
-
-  const counter = setInterval(() => {
-    current += step;
-    if (current >= target) {
-      current = target;
-      clearInterval(counter);
-    }
-    visitorCountEl.textContent = current.toLocaleString() + "+";
-  }, 30);
 }
