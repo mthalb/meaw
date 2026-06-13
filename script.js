@@ -78,7 +78,15 @@ if (visitorCountEl) {
     visitorCountEl.textContent = current.toLocaleString() + "+";
   }, 30);
 }
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GYLPY6V46V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-GYLPY6V46V');
+</script>
 
 
 window.addEventListener("scroll", revealOnScroll);
